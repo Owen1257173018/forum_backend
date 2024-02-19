@@ -27,7 +27,7 @@ SECRET_KEY = "django-insecure-)iq29#8qb-g*(dz%o9m^9g1b6_tmktf_f&a^#dv9#9n_)mh&3-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mathwechat.top']
 
 
 # Application definition
