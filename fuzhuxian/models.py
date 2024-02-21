@@ -44,5 +44,5 @@ class Image(models.Model):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True, verbose_name="对应帖子或评论", help_text="对应帖子或评论")
 
     def __str__(self):
-        return self.image
+        return self.image.name
 
