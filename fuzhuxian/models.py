@@ -1,7 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
-
+from PIL import Image as PilImage
+import io
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 class Tag(models.Model):
     name = models.CharField(max_length=200,verbose_name='标签名称',help_text='标签名称')
@@ -40,9 +42,38 @@ class Comment(Content):
 
 class Image(models.Model):
     image = models.ImageField(verbose_name="图片", help_text="图片")
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True, verbose_name="对应帖子或评论", help_text="对应帖子或评论")
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True, verbose_name="对应帖子或评论", help_text="对应帖子或评论")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True, verbose_name="对应帖子", help_text="对应帖子")
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True, verbose_name="对应评论", help_text="对应评论")
+
+    def save(self, *args, **kwargs):
+        # Open the uploaded image
+        im = PilImage.open(self.image)
+
+        # Convert image to RGB if it's in PNG format (has an alpha channel)
+        if im.mode == 'RGBA' or im.mode == 'P':
+            im = im.convert('RGB')
+
+        # Define an output BytesIO stream for the new image
+        output = io.BytesIO()
+
+        # Save image to the output stream
+        # We must specify a format; using the original format if possible
+        format = im.format if im.format is not None else 'JPEG'
+
+        if format.lower() in ['jpeg', 'jpg']:
+            im.save(output, format=format, quality=5)  # Lower quality means higher compression
+        else:  # Fallback for PNG since format would be 'PNG'
+            im.save(output, format='PNG', optimize=True)
+
+        output_size = output.tell()  # Find out the current cursor position in BytesIO
+        file_name = f"{self.image.name.split('.')[0]}.{format.lower()}"
+
+        # Edit the image field with the new compressed image
+        output.seek(0)
+        self.image = InMemoryUploadedFile(output, 'ImageField', file_name, 'image/jpeg', output_size, None)
+
+        # Call the parent save method to save the object
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.image.name
-
