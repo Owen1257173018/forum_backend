@@ -25,6 +25,13 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def get_queryset(self):
+            queryset = Post.objects.all()
+            status = self.request.query_params.get('status', None)
+            if status is not None:
+                queryset = queryset.filter(status=status)
+            return queryset
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
