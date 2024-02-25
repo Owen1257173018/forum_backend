@@ -4,8 +4,8 @@ from .models import Tag, Post, Comment, Image, STATUS_CHOICES,CustomUser
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(write_only=True)
-    number = serializers.CharField(write_only=True)
+    username = serializers.CharField()
+    number = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     class Meta:
