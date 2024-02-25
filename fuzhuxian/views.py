@@ -2,7 +2,11 @@ from .models import Tag, Post, Comment, Image ,CustomUser
 from .serializers import  PostSerializer, TagSerializer, CommentSerializer, CustomUserSerializer, ImageSerializer
 from rest_framework import viewsets,status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly,AllowAny
-
+from rest_framework.views import APIView
+from rest_framework.test import APIRequestFactory
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import status
+from django.contrib.auth import get_user_model
 
 
 
@@ -31,6 +35,37 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         else:
             self.permission_classes = [IsAuthenticatedOrReadOnly, ]
         return super(CustomUserViewSet, self).get_permissions()
+
+User = get_user_model()
+
+class CustomTokenObtainView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request, *args, **kwargs):
+        number = request.data.get('number', None)
+        password = request.data.get('password', None)
+
+        try:
+            # 根据学号查找对应的用户
+            user = User.objects.get(number=number)
+        except User.DoesNotExist:
+            return Response({'error': 'Invalid number or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # 使用RequestFactory模拟一个请求到/token/接口
+        factory = APIRequestFactory()
+        token_request = factory.post('/user/token/', {
+            'username': user.username,  # 使用找到的用户名
+            'password': password
+        }, format='json')
+
+        # 创建一个TokenObtainPairView实例并调用它的post方法
+        view = TokenObtainPairView.as_view()
+        token_response = view(token_request)
+
+        # 从TokenObtainPairView的响应中提取token数据
+        if token_response.status_code == status.HTTP_200_OK:
+            return Response(token_response.data, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Invalid number or password'}, status=token_response.status_code)
 
 
 class TagViewSet(viewsets.ModelViewSet):
