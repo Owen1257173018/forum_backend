@@ -39,19 +39,30 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by('-created_at')
+    queryset = Post.objects.all().order_by('-created_at',)  # 假设'created'是存储创建时间的字段
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+
     def get_queryset(self):
-            queryset = Post.objects.all().order_by('-created_at')
-            status = self.request.query_params.get('status', None)
-            if status is not None:
-                queryset = queryset.filter(status=status)
-            return queryset
+        """
+        Optionally restricts the returned posts to a given user,
+        by adding a `my_posts` query parameter to the URL.
+        """
+        queryset = Post.objects.all().order_by('-created_at')
+        status = self.request.query_params.get('status')
+        if status is not None:
+            queryset = queryset.filter(status=status)
+
+        # Check if 'my_posts' query param is set to true
+        my_posts = self.request.query_params.get('my_posts') == 'true'
+        if my_posts and self.request.user.is_authenticated:
+            queryset = queryset.filter(author=self.request.user)
+
+        return queryset
 
 
 class CommentViewSet(viewsets.ModelViewSet):

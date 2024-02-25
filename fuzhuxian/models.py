@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser):
-    number = models.CharField(max_length=20)
+    number = models.CharField(max_length=20,unique=True)
     def __str__(self):
         return self.username
 

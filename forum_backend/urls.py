@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 from fuzhuxian.views import CustomUserViewSet, TagViewSet, PostViewSet, CommentViewSet, SimilarPostsByTags
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 
 router = DefaultRouter()
 router.register(r'users', CustomUserViewSet)
@@ -22,4 +24,6 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('', include(router.urls)),
     path('', include(comments_router.urls)),
+    path('user/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('user/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
