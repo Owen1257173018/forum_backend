@@ -1,5 +1,41 @@
 from django.contrib import admin
-from .models import Tag, Post, Comment, Image
+from .models import Tag, Post, Comment, Image,CustomUser
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.admin import UserAdmin
+
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm):
+        model = CustomUser
+        fields = ('username', 'number')
+
+class CustomUserChangeForm(UserChangeForm):
+    class Meta(UserChangeForm):
+        model = CustomUser
+        fields = UserChangeForm.Meta.fields
+
+@admin.register(CustomUser)
+class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
+    model = CustomUser
+    list_display = ['username', 'number', 'is_staff']
+    # ...
+
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Personal info', {'fields': ('number',)}),
+        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser',
+                                   'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'number', 'password1', 'password2'),
+        }),
+    )
+
+
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

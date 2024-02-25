@@ -4,10 +4,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
-from fuzhuxian.views import UserViewSet, TagViewSet, PostViewSet, CommentViewSet, SimilarPostsByTags
+from fuzhuxian.views import CustomUserViewSet, TagViewSet, PostViewSet, CommentViewSet, SimilarPostsByTags
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet)
+router.register(r'users', CustomUserViewSet)
 router.register(r'tags', TagViewSet)
 router.register(r'posts', PostViewSet)
 router.register(r'comments', CommentViewSet)

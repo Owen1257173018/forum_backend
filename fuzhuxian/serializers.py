@@ -1,24 +1,20 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from .models import Tag, Post, Comment, Image, STATUS_CHOICES
+from .models import Tag, Post, Comment, Image, STATUS_CHOICES,CustomUser
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email')
 
-
-class UserCreateSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(write_only=True)
+    number = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'password')
+        model = CustomUser
+        fields = ('number', 'username',  'password')
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        user = User(**validated_data)
+        user = CustomUser(**validated_data)
         user.set_password(password)
         user.save()
         return user
@@ -37,7 +33,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, required=False, )
     images = ImageSerializer(many=True, read_only=True, source='image_set', required=False)
     status = serializers.ChoiceField(choices=STATUS_CHOICES, default="n")
@@ -99,7 +95,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = CustomUserSerializer(read_only=True)
     post = serializers.PrimaryKeyRelatedField(queryset=Post.objects.all())
     images = ImageSerializer(many=True, read_only=True, source='image_set')
     tags = TagSerializer(many=True, required=False)

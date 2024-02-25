@@ -4,6 +4,13 @@ from django.contrib.auth.models import User
 from PIL import Image as PilImage
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.contrib.auth.models import AbstractUser
+
+
+class CustomUser(AbstractUser):
+    number = models.CharField(max_length=20)
+    def __str__(self):
+        return self.username
 
 class Tag(models.Model):
     name = models.CharField(max_length=200,verbose_name='标签名称',help_text='标签名称')

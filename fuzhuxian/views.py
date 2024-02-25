@@ -1,14 +1,14 @@
 from django.contrib.auth.models import User
 from rest_framework.pagination import PageNumberPagination
-from .models import Tag, Post, Comment, Image
-from .serializers import UserSerializer,  PostSerializer, TagSerializer, CommentSerializer, UserCreateSerializer, ImageSerializer
+from .models import Tag, Post, Comment, Image ,CustomUser
+from .serializers import  PostSerializer, TagSerializer, CommentSerializer, CustomUserSerializer, ImageSerializer
 from rest_framework import viewsets,status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly,AllowAny
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+class CustomUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
