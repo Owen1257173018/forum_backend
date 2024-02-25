@@ -176,3 +176,5 @@ LOGGING = {
         'level': 'DEBUG',
     },
 }
+
+AUTH_USER_MODEL = 'fuzhuxian.CustomUser'
