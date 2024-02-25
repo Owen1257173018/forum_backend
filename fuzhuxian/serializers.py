@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from .models import Tag, Post, Comment, Image, STATUS_CHOICES,CustomUser
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
 
-
+User = get_user_model()
 
 class CustomUserSerializer(serializers.ModelSerializer):
     username = serializers.CharField()
@@ -13,11 +15,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = ('number', 'username',  'password')
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = CustomUser(**validated_data)
-        user.set_password(password)
-        user.save()
+        # 使用Django的create_user方法来处理密码的散列
+        user = User.objects.create_user(**validated_data)
         return user
+
+    # 添加一个新的方法来获取token
+    def get_token(self, user):
+        refresh = RefreshToken.for_user(user)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
 
 
 class TagSerializer(serializers.ModelSerializer):

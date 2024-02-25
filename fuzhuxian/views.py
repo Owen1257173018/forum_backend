@@ -1,15 +1,36 @@
-from django.contrib.auth.models import User
-from rest_framework.pagination import PageNumberPagination
 from .models import Tag, Post, Comment, Image ,CustomUser
 from .serializers import  PostSerializer, TagSerializer, CommentSerializer, CustomUserSerializer, ImageSerializer
 from rest_framework import viewsets,status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly,AllowAny
 
 
+
+
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    # 重写create方法来允许未认证用户注册，并返回token
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        token = serializer.get_token(user)  # 获取token
+
+        headers = self.get_success_headers(serializer.data)
+        return Response({
+            'user': serializer.data,
+            'token': token
+        }, status=status.HTTP_201_CREATED, headers=headers)
+
+    # 确保create操作可以由任何人访问
+    def get_permissions(self):
+        if self.action == 'create':
+            self.permission_classes = [AllowAny, ]
+        else:
+            self.permission_classes = [IsAuthenticatedOrReadOnly, ]
+        return super(CustomUserViewSet, self).get_permissions()
 
 
 class TagViewSet(viewsets.ModelViewSet):
