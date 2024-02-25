@@ -18,7 +18,7 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -26,7 +26,7 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def get_queryset(self):
-            queryset = Post.objects.all()
+            queryset = Post.objects.all().order_by('-created_at')
             status = self.request.query_params.get('status', None)
             if status is not None:
                 queryset = queryset.filter(status=status)
