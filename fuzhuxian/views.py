@@ -1,18 +1,14 @@
 from .models import Tag, Post, Comment, Image ,CustomUser
-from .serializers import  PostSerializer, TagSerializer, CommentSerializer, CustomUserSerializer, ImageSerializer, ImageUploadSerializer
+from .serializers import  PostSerializer, TagSerializer, CommentSerializer, CustomUserSerializer, ImageSerializer
 from rest_framework import viewsets,status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly,AllowAny
 from rest_framework.views import APIView
 from rest_framework.test import APIRequestFactory
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import MultiPartParser, FormParser
-from django.shortcuts import get_object_or_404
-from django.db.models import Count, Value
-from rest_framework.response import Response
-from django.db.models import Q,F
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -94,7 +90,7 @@ class CustomTokenObtainView(APIView):
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [AllowAny]
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at',)  # 假设'created'是存储创建时间的字段
@@ -142,10 +138,48 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
-    Serializerpermission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def create(self, request, *args, **kwargs):
+        # 从请求获取post_id和comment_id
+        post_id = request.data.get('post')
+        comment_id = request.data.get('comment')
+        # 准备要修改的数据
+        data = request.data.copy()
+
+        # 根据post_id获取Post实例的ID
+        if post_id:
+            post_instance = Post.objects.filter(id=post_id).first()
+            # 确保实例存在
+            if post_instance:
+                data['post'] = post_instance.id
+            else:
+                return Response({'post': ['No Post with this ID.']}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 根据comment_id获取Comment实例的ID
+        if comment_id:
+            comment_instance = Comment.objects.filter(id=comment_id).first()
+            # 确保实例存在
+            if comment_instance:
+                data['comment'] = comment_instance.id
+            else:
+                return Response({'comment': ['No Comment with this ID.']}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 创建新的序列化器实例
+        serializer = self.get_serializer(data=data)
+
+        # 校验数据
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        # 发送成功创建的响应
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-
+from django.db.models import Count, Value, When, Case
+from rest_framework.response import Response
+from django.db.models import Q,F
 
 def find_posts(user_tags):
     total_tags = len(user_tags)
@@ -178,18 +212,3 @@ class SimilarPostsByTags(viewsets.ViewSet):
         serializer = PostSerializer(posts, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class ImageUploadView(APIView):
-    parser_classes = (MultiPartParser, FormParser)
-
-    def post(self, request, *args, **kwargs):
-        post_id = request.data['post_id']
-        post = get_object_or_404(Post, id=post_id)
-        image_serializer = ImageUploadSerializer(data=request.data)
-
-        if image_serializer.is_valid():
-            image_serializer.save(post=post)
-            return Response(image_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(image_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

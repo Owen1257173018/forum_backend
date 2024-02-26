@@ -52,13 +52,14 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'status', 'tags', 'body', 'created_at', 'update_at', 'author', 'images')
 
     def create(self, validated_data):
+
         request = self.context.get('view').request
         images_data = request.FILES
+        tags_data = validated_data.pop('tags', [])
         post = Post.objects.create(**validated_data)
 
         # 检测 content_type，根据不同的 content_type 处理 tags
         if request.content_type == 'application/json':
-            tags_data = validated_data.pop('tags', [])
             for tag_data in tags_data:
                 tag, _ = Tag.objects.get_or_create(name=tag_data['name'])
                 post.tags.add(tag.id)
@@ -171,8 +172,3 @@ class CommentSerializer(serializers.ModelSerializer):
             post.save()
         instance.save()
         return instance
-
-class ImageUploadSerializer(serializers.ModelSerializer):
-    class Meta:
-            model = Image
-            fields = '__all__'
