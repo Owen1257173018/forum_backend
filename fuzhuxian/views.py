@@ -7,7 +7,8 @@ from rest_framework.test import APIRequestFactory
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
 from django.contrib.auth import get_user_model
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import ValidationError
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -35,6 +36,24 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         else:
             self.permission_classes = [IsAuthenticatedOrReadOnly, ]
         return super(CustomUserViewSet, self).get_permissions()
+
+    def get_queryset(self):
+        # 尝试通过JWT认证获取请求用户
+        user = None
+        try:
+            user = JWTAuthentication().authenticate(self.request)
+        except ValidationError:
+            # 如果token无效，可以处理异常或简单地忽略，
+            # 因为下面的代码在`user`为None时会返回所有用户数据
+            pass
+
+        if user is not None:
+            # 已经认证，返回该用户数据
+            return CustomUser.objects.filter(id=user[0].id)
+        else:
+            # 未认证，返回所有用户信息
+            return CustomUser.objects.all()
+
 
 User = get_user_model()
 

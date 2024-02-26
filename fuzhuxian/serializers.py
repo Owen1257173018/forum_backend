@@ -13,7 +13,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('number', 'username',  'password')
+        fields = ('number', 'username',  'password','is_staff', 'id')
 
     def create(self, validated_data):
         # 使用Django的create_user方法来处理密码的散列
