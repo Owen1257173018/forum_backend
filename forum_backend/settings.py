@@ -182,3 +182,11 @@ LOGGING = {
 
 AUTH_USER_MODEL = 'fuzhuxian.CustomUser'
 
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=3650),  # 例如，有效期为60分钟
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=3650),     # 刷新token有效期为1天
+    # 其他配置...
+}
