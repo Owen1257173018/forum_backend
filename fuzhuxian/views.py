@@ -1,14 +1,18 @@
 from .models import Tag, Post, Comment, Image ,CustomUser
-from .serializers import  PostSerializer, TagSerializer, CommentSerializer, CustomUserSerializer, ImageSerializer
+from .serializers import  PostSerializer, TagSerializer, CommentSerializer, CustomUserSerializer, ImageSerializer, ImageUploadSerializer
 from rest_framework import viewsets,status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly,AllowAny
 from rest_framework.views import APIView
 from rest_framework.test import APIRequestFactory
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.shortcuts import get_object_or_404
+from django.db.models import Count, Value
+from rest_framework.response import Response
+from django.db.models import Q,F
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -141,9 +145,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     Serializerpermission_classes = [IsAuthenticatedOrReadOnly]
 
 
-from django.db.models import Count, Value, When, Case
-from rest_framework.response import Response
-from django.db.models import Q,F
+
 
 def find_posts(user_tags):
     total_tags = len(user_tags)
@@ -176,3 +178,18 @@ class SimilarPostsByTags(viewsets.ViewSet):
         serializer = PostSerializer(posts, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ImageUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        post_id = request.data['post_id']
+        post = get_object_or_404(Post, id=post_id)
+        image_serializer = ImageUploadSerializer(data=request.data)
+
+        if image_serializer.is_valid():
+            image_serializer.save(post=post)
+            return Response(image_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(image_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
