@@ -172,7 +172,7 @@ class CommentSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
- class ImageUploadSerializer(serializers.ModelSerializer):
-     class Meta:
+class ImageUploadSerializer(serializers.ModelSerializer):
+    class Meta:
             model = Image
             fields = '__all__'
