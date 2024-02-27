@@ -142,38 +142,37 @@ class ImageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def create(self, request, *args, **kwargs):
-        # 从请求获取post_id和comment_id
+        # 根据 post_id 查找 Post 实例
+        post_instance = None
         post_id = request.data.get('post')
-        comment_id = request.data.get('comment')
-        # 准备要修改的数据
-        data = request.data.copy()
-
-        # 根据post_id获取Post实例的ID
         if post_id:
             post_instance = Post.objects.filter(id=post_id).first()
-            # 确保实例存在
-            if post_instance:
-                data['post'] = post_instance.id
-            else:
+            if not post_instance:
                 return Response({'post': ['No Post with this ID.']}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 根据comment_id获取Comment实例的ID
+        # 根据 comment_id 查找 Comment 实例
+        comment_instance = None
+        comment_id = request.data.get('comment')
         if comment_id:
             comment_instance = Comment.objects.filter(id=comment_id).first()
-            # 确保实例存在
-            if comment_instance:
-                data['comment'] = comment_instance.id
-            else:
+            if not comment_instance:
                 return Response({'comment': ['No Comment with this ID.']}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 创建新的序列化器实例
-        serializer = self.get_serializer(data=data)
+        # 从请求中获取 image 文件
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return Response({'image': ['No image provided.']}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 校验数据
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        # 创建 Image 实例
+        image_instance = Image.objects.create(
+            image=image_file,
+            post=post_instance,
+            comment=comment_instance
+        )
 
-        # 发送成功创建的响应
+        # 序列化 Image 实例
+        serializer = self.get_serializer(image_instance)
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
