@@ -68,7 +68,7 @@ class Image(models.Model):
         format = im.format if im.format is not None else 'JPEG'
 
         if format.lower() in ['jpeg', 'jpg']:
-            im.save(output, format=format, quality=5)  # Lower quality means higher compression
+            im.save(output, format=format, quality=20)  # Lower quality means higher compression
         else:  # Fallback for PNG since format would be 'PNG'
             im.save(output, format='PNG', optimize=True)
 
