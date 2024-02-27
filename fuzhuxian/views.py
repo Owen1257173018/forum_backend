@@ -118,6 +118,23 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def list(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            # 用户已认证，不使用分页器，返回所有结果
+            queryset = self.filter_queryset(self.get_queryset())
+
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            # 如果没有启用分页或者已经是全部数据，直接序列化所有查询集
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            # 用户未认证，按默认方式处理，这将应用分页器
+            return super(PostViewSet, self).list(request, *args, **kwargs)
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
