@@ -121,6 +121,8 @@ class CommentSerializer(serializers.ModelSerializer):
         images_data = request.FILES
         comment = Comment.objects.create(**validated_data)
         post = comment.post
+        if(post.status == 'n'):
+            post.status = 'i'
 
         if modify_tags:
             post.tags.clear()
